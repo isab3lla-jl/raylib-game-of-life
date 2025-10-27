@@ -25,11 +25,15 @@
 ********************************************************************************************/
 
 #include "raylib.h"
+#include <stdlib.h>
+#include <time.h>
+
 //------------------------------------------------------------------------------------
 // Local Variable
 //------------------------------------------------------------------------------------
 int grid_w, grid_h;
 int sqr_len = 10;
+int n = 0;
 //------------------------------------------------------------------------------------
 // Program main entry point
 //------------------------------------------------------------------------------------
@@ -45,8 +49,10 @@ int main(void)
     grid_w = screenWidth/sqr_len;
     grid_h = screenWidth/sqr_len;
 
-    int a[grid_w][grid_h];
-    int b[grid_w][grid_h];
+    int state_a[grid_w][grid_h];
+    //int state_b[grid_w][grid_h];
+    state_a[1][0] = 1;
+    state_a[0][1] = 1;
     
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
@@ -56,6 +62,25 @@ int main(void)
     {
         // Update
         //----------------------------------------------------------------------------------
+        for (int row=0; row<grid_w; row++){
+            for (int col=0; col<grid_h; col++){
+                srand(2*row+col);
+                state_a[row][col] = rand()%2;
+            }
+        }
+        
+        for (int row=0; row<grid_w; row++){
+            for (int col=0; col<grid_h; col++){
+                if (row-1 != 0) n++;
+                if (row+1 != 0) n++;
+                if (col-1 != 0) n++;
+                if (col+1 != 0) n++;
+                if (n<2) state_a[row][col] = 0;
+                if (n>=2) state_a[row][col] = 1;
+                if (n>3) state_a[row][col] = 0;
+                n=0;
+            }
+        }
         
         //----------------------------------------------------------------------------------
 
@@ -68,6 +93,9 @@ int main(void)
             for (int row=0; row<grid_w; row++){
                 for (int col=0; col<grid_h; col++){
                     DrawRectangle(row*sqr_len+1, col*sqr_len+1, sqr_len-2, sqr_len-2, RAYWHITE);
+                    if (state_a[row][col] != 0){
+                        DrawRectangle(row*sqr_len+1, col*sqr_len+1, sqr_len-2, sqr_len-2, DARKGRAY);
+                    }
                 }
             }
             
