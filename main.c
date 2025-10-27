@@ -65,10 +65,10 @@ int main(void)
         for (int row=0; row<grid_w; row++){
             for (int col=0; col<grid_h; col++){
                 srand(2*row+col);
-                state_a[row][col] = rand()%2;
+                state_a[row][col] = rand()%7;
             }
         }
-        
+        /*
         for (int row=0; row<grid_w; row++){
             for (int col=0; col<grid_h; col++){
                 if (row-1 != 0) n++;
@@ -81,7 +81,7 @@ int main(void)
                 n=0;
             }
         }
-        
+        //*/
         //----------------------------------------------------------------------------------
 
         // Draw
