@@ -1,29 +1,3 @@
-/*******************************************************************************************
-*
-*   raylib [core] example - Basic window
-*
-*   Welcome to raylib!
-*
-*   To test examples, just press F6 and execute 'raylib_compile_execute' script
-*   Note that compiled executable is placed in the same folder as .c file
-*
-*   To test the examples on Web, press F6 and execute 'raylib_compile_execute_web' script
-*   Web version of the program is generated in the same folder as .c file
-*
-*   You can find all basic examples on C:\raylib\raylib\examples folder or
-*   raylib official webpage: www.raylib.com
-*
-*   Enjoy using raylib. :)
-*
-*   Example originally created with raylib 1.0, last time updated with raylib 1.0
-*
-*   Example licensed under an unmodified zlib/libpng license, which is an OSI-certified,
-*   BSD-like license that allows static linking with closed source software
-*
-*   Copyright (c) 2013-2024 Ramon Santamaria (@raysan5)
-*
-********************************************************************************************/
-
 #include "raylib.h"
 #include <stdio.h>
 #include <time.h>
@@ -34,7 +8,7 @@
 //------------------------------------------------------------------------------------
 int grid_w, grid_h;
 int sqr_len = 10;
-static void UpdateDrawFrame(int n, int w, int h, int (*a)[h], int (*b)[h]);
+static void UpdateDrawFrame(int n, int w, int h, int (*a)[h], int (*b)[h], bool isPaused);
 static void RandomizeGrid(int w, int h, int (*a)[h]);
 //------------------------------------------------------------------------------------
 // Program main entry point
@@ -57,6 +31,8 @@ int main(void)
     RandomizeGrid(grid_w, grid_h, state_a);
     
     SetTargetFPS(9);
+
+    bool isPaused = false;
     //--------------------------------------------------------------------------------------
 
     // Main game loop
@@ -64,12 +40,25 @@ int main(void)
 
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
-        if(IsKeyPressed(KEY_R))
+        if (IsKeyPressed(KEY_SPACE))
         {
-            RandomizeGrid(grid_w, grid_h, n?state_a:state_b);
+            isPaused = !isPaused;
         }
-        UpdateDrawFrame(n%2,grid_w,grid_h, n?state_a:state_b, n?state_b:state_a);
-        n = !n;
+
+        if (IsKeyPressed(KEY_R) && !isPaused)
+        {
+            RandomizeGrid(grid_w, grid_h, n ? state_a : state_b);
+        }
+
+        if (!isPaused)
+        {
+            UpdateDrawFrame(n % 2, grid_w, grid_h, n ? state_a : state_b, n ? state_b : state_a, isPaused);
+            n = !n;
+        }
+        else
+        {
+            UpdateDrawFrame(n % 2, grid_w, grid_h, n ? state_a : state_b, n ? state_b : state_a, isPaused);
+        }
     }
 
     // De-Initialization
@@ -92,51 +81,49 @@ static void RandomizeGrid(int w, int h, int (*a)[h])
     }
 }
 
-static void UpdateDrawFrame(int n, int w, int h, int (*a)[h], int (*b)[h])
+static void UpdateDrawFrame(int n, int w, int h, int (*a)[h], int (*b)[h], bool isPaused)
 {
-    
-    // Update
-    //----------------------------------------------------------------------------------
-    for(int row=0; row<grid_w; row++)
+    // Update logic only runs if the game is not paused
+    if (!isPaused)
     {
-        for(int col=0; col<grid_h; col++)
+        for(int row=0; row<grid_w; row++)
         {
-            int neighbors = 0;
-            for(int drow=-1; drow<=1; drow++)
+            for(int col=0; col<grid_h; col++)
             {
-                for(int dcol=-1; dcol<=1; dcol++)
+                int neighbors = 0;
+                for(int drow=-1; drow<=1; drow++)
                 {
-                    if(drow==0 && dcol==0) continue;
-                    int nrow = row + drow;
-                    int ncol = col + dcol;
-                    if(nrow>=0 && nrow<grid_w && ncol>=0 && ncol<grid_h)
+                    for(int dcol=-1; dcol<=1; dcol++)
                     {
-                        neighbors += a[nrow][ncol];
+                        if(drow==0 && dcol==0) continue;
+                        int nrow = row + drow;
+                        int ncol = col + dcol;
+                        if(nrow>=0 && nrow<grid_w && ncol>=0 && ncol<grid_h)
+                        {
+                            neighbors += a[nrow][ncol];
+                        }
                     }
                 }
-            }
 
-            // Apply Conway's Game of Life rules
-            if(a[row][col])
-            {
-                if(neighbors < 2 || neighbors > 3)
-                    b[row][col] = 0; // Cell dies
+                // Apply Conway's Game of Life rules
+                if(a[row][col])
+                {
+                    if(neighbors < 2 || neighbors > 3)
+                        b[row][col] = 0; // Cell dies
+                    else
+                        b[row][col] = 1; // Cell lives
+                }
                 else
-                    b[row][col] = 1; // Cell lives
-            }
-            else
-            {
-                if(neighbors == 3)
-                    b[row][col] = 1; // Cell becomes alive
-                else
-                    b[row][col] = 0; // Cell remains dead
+                {
+                    if(neighbors == 3)
+                        b[row][col] = 1; // Cell becomes alive
+                    else
+                        b[row][col] = 0; // Cell remains dead
+                }
             }
         }
     }
-    
-    //----------------------------------------------------------------------------------
 
-    
     // Draw
     //----------------------------------------------------------------------------------
     BeginDrawing();
@@ -148,6 +135,14 @@ static void UpdateDrawFrame(int n, int w, int h, int (*a)[h], int (*b)[h])
                 if(a[row][col])
                 DrawRectangle(row*sqr_len+1,col*sqr_len+1, sqr_len-2, sqr_len-2, DARKPURPLE);
             }
+        }
+
+        // Draw the pause text when the game is paused
+        if (isPaused)
+        {
+            const char* pauseText = "PAUSED";
+            int textWidth = MeasureText(pauseText, 40);
+            DrawText(pauseText, (GetScreenWidth() - textWidth) / 2, GetScreenHeight() / 2 - 20, 40, LIGHTGRAY);
         }
     EndDrawing();
     //----------------------------------------------------------------------------------
